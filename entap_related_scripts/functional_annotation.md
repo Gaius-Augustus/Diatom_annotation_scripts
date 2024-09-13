@@ -1,9 +1,12 @@
 ## Functional Annotation with EnTAP (v.1.3.0)
 
 * Run Parameters: 
-    - entap_v1.3.0_params
+    - [entap_v1.3.0_params](entap_v1.3.0_params)
+    - e-value: 1e-05
+    - query coverage: 50
+    - target coverage: 50
 * Configuration:
-    - entap_v1.3.0_config.ini
+    - [entap_v1.3.0_config.ini](entap_v1.3.0_config.ini)
 * Databases Searched:
     - RefSeq: complete.protein.faa.216.dmnd
     - UniProt: uniprot_sprot.fa.2.0.6.dmnd
@@ -17,17 +20,18 @@ This is a simplified representation of how EnTAP was run using *Fistulifera pell
 ```
 EnTAP --runP --entap-ini entap_v1.3.0_config.ini --run-ini entap_v1.3.0_params --out-dir entap_outfiles --input braker.aa --taxon Fistulifera_pelliculosa
 ```
-The actual script (entap_v1.3.0.sh) loops through all the species.
+The actual script ([entap_v1.3.0.sh](entap_v1.3.0.sh)) loops through all the species.
 
 ## Convert BRAKER GTF to GFF with AGAT (v.1.4.0)
 In order to append functional information using the Parent/ID relationship, the structural annotation needed to be converted into a GFF. Unfortunately, AGAT mishandled pre-leading introns, resulting in misplaced UTRs/exons. These were removed. 
 
 ```
-agat_convert_sp_gxf2gxf.pl -g ${gff} -o ${id}.gff
+agat_convert_sp_gxf2gxf.pl -g ${gtf} -o ${id}.gff
 ```
 To parallelize this process, Nextflow was leveraged, see:
-* agat.sh
-* agat.nf 
+* [agat.sh](agat.sh)
+* [agat.nf](agat.nf)
+* [nextflow.config](nextflow.config)
 
 ## Decorate GFF File with Functional Information
 [NCBI Datasets](https://www.ncbi.nlm.nih.gov/datasets/docs/v2/download-and-install/) and [pdb_pfam_mapping.txt](https://ftp.ebi.ac.uk/pub/databases/Pfam/mappings/pdb_pfam_mapping.txt) are required to decorate the GFF. Instead of using the RefSeq accession (XP*) for dbxref, we pull the GeneID. Likewise, the PFAM accession is needed instead of the name. 
@@ -46,4 +50,4 @@ This script will append the following to the 9th column:
     - GO [mRNA, CDS]
 * note=EggNOG description [mRNA, CDS]
 
-The full script (loop.sh) iterates through all the species.
+The full script ([loop.sh](loop.sh)) iterates through all the species. 
