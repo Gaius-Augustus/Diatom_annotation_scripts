@@ -1,19 +1,12 @@
 # Scripts used to prepare filtered braker.gtf for NCBI Genomes submission
 
-This repository attains to the manuscript "Annotation of protein-coding genes in 49 diatom genomes (Bacillariophyta clade)" by Natalia Nenasheva, Clara Pitzschel, Cynthia Webster, Alex Hart, Jill Wegrzyn, Mia M. Bengtsson, Katharina J. Hoff
+This repository attains to the manuscript "Annotation of protein-coding genes in 49 diatom genomes (Bacillariophyta clade)" by Natalia Nenasheva, Clara Pitzschel, Cynthia Webster, Alex Hart, Jill Wegrzyn, Mia M. Bengtsson, Katharina J. Hoff.
 
-Contact: katharina.hoff@uni-greifswald.de
+It contains scripts and config files that were used to convert the BRAKER output files to (hopefully) NCBI Genomes compliant, functionally decorated gff3 files that are available at Zenodo with doi 10.5281/zenodo.13745090.
 
-## Processing of braker.gtf file
+Contacts: katharina.hoff@uni-greifswald.de, cynthia.webster@uconn.edu
 
-<Alex and/or Cynthia insert command lines, there was AGAT, and functional decoration>
+File processing steps (starting with braker.gtf) are documented in:
 
-## Processing of functionally decorated gff3 file
-
-```
-add_mRNA_line.py -i decorated.gff3 -o mRNA.gff3
-fix_product_names_ncbi.py -i mRNA.gff3 -o fixed_names.gff3
-fix_Dbxref_attributes_in_genes.py -i fixed_names.gff3 -o fixed_dbxref.gff3
-```
-
-The contents of species-specific fixed_dbxref.gff3 files are provided at Zenodo with doi 10.5281/zenodo.13745090
+   1. [functional_annotation.md](entap_related_scripts/functional_annotation.md)
+   2. [postprocessing.md](postprocessing_scripts/postprocessing.md)
