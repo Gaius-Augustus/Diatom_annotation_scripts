@@ -6,7 +6,7 @@ It contains scripts and config files that were used to convert the BRAKER output
 
 Contacts: katharina.hoff@uni-greifswald.de, cynthia.webster@uconn.edu
 
-File processing steps (starting with braker.gtf) are documented in:
+File processing steps (starting with braker.gtf/braker.aa) are documented in:
 
    1. [functional_annotation.md](entap_related_scripts/functional_annotation.md)
    2. [postprocessing.md](postprocessing_scripts/postprocessing.md)
