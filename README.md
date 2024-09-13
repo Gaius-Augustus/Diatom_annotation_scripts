@@ -1,4 +1,4 @@
-# Scripts used to prepare filtered braker.gtf for NCBI Genomes submission
+# Scripts used to prepare braker.gtf for NCBI Genomes submission
 
 This repository attains to the manuscript "Annotation of protein-coding genes in 49 diatom genomes (Bacillariophyta clade)" by Natalia Nenasheva, Clara Pitzschel, Cynthia Webster, Alex Hart, Jill Wegrzyn, Mia M. Bengtsson, Katharina J. Hoff.
 
