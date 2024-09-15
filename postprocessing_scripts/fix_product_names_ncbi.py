@@ -126,12 +126,9 @@ def fix_product_name(product_name):
     product_name = re.sub(r'members', r'member', product_name)
     product_name = re.sub(r'antigens', r'antigen', product_name)
 
-
-
-
-
-
-
+    # if something comes afte -like, move the -like to the end of the string
+    product_name = re.sub(r'(.*)-like(.*)', r'\1\2-like', product_name)
+    
     # residue Fragilaria_radians.dr # this should be ignored, it's valuable information
     # conserved protein Thalassiosira_delicatula.dr I think this should also be ignored
 
