@@ -88,7 +88,7 @@ def message_llm (message_user,
 
 def main():
     # Create an ArgumentParser object
-    parser = argparse.ArgumentParser(description='Query LLM to identify product names that contain plurals or repetitions of words. LLAMA only works with active VPN connection.')
+    parser = argparse.ArgumentParser(description='Query LLM to identify product names that contain plurals or repetitions of words. LLAMA only works with active VPN connection. Note that LLAMA performs very poorly. gpt4o-mini overcalls plurals, but it is feasible to through the output.')
 
     # Add the input file argument
     parser.add_argument('--input', '-i', type=str, required=True,
