@@ -53,3 +53,7 @@ get_longest_isoform_from_braker_aa.py -i braker_filtered.aa -o braker_longest.aa
 ```
 
 The contents of species-specific fixed_dbxref.gff3 files are provided at Zenodo with doi 10.5281/zenodo.13745090
+
+## OrthoFinder analysis
+
+The bash scripts and command to perform OrthoFinder analysis are described in (orthofinder.md)[orthofinder.md].
