@@ -7,16 +7,25 @@ def fix_product_name(product_name):
     # Fix uncharacterized protein
     if product_name.startswith("uncharacterized protein"):
         product_name = "putative protein"
-    # if a product name ends in putative, remove that
-    product_name = re.sub(r'putative$', '', product_name, flags=re.IGNORECASE)
+    import re
+
+    # Check if 'putative' is the last word
+    if re.search(r'\bputative\b\s*$', product_name, flags=re.IGNORECASE):
+        #print("Trying to move putative in ", product_name)
+        # Remove 'putative' from the end and strip any extra spaces
+        product_name = re.sub(r'\bputative\b\s*$', '', product_name, flags=re.IGNORECASE).strip()
+        # Add 'putative' to the front
+        product_name = 'putative ' + product_name
+        #print(product_name)
+
     
     # if a product name ends in uncharacterised, remove that
-    product_name = re.sub(r'uncharacterised$', '', product_name, flags=re.IGNORECASE)
+    product_name = re.sub(r'\buncharacterised\b\s*$', '', product_name, flags=re.IGNORECASE)
     # remove trailing whitespace
     product_name = product_name.strip()
 
     # Fix hypothetical protein only if followed by additional text, keeping the rest of the text
-    if product_name.startswith("hypothetical protein "):
+    if product_name.startswith("hypothetical protein\s"):
         product_name = product_name.replace("hypothetical protein", "putative protein", 1)
     
     # Fix proteins protein
@@ -46,6 +55,8 @@ def fix_product_name(product_name):
     # also remove like from chloroplastic-like and mitochondrial-like
     product_name = re.sub(r'chloroplastic-like', r'chloroplastic', product_name)
     product_name = re.sub(r'mitochondrial-like', r'mitochondrial', product_name)
+    product_name = re.sub(r'chloroplasticchromoplastic-like', r'chloroplasticchromoplastic', product_name)
+
     # remove -like proteins from protein -like protein
     product_name = re.sub(r'protein -like protein', r'protein', product_name)
 
@@ -62,7 +73,8 @@ def fix_product_name(product_name):
     product_name = re.sub(r'-like(.*)-like', r'\1-like', product_name)
 
     # if a product name contains -like putative, remove putative
-    product_name = re.sub(r'-like putative', r'-like', product_name)
+    if re.search(r'-like', product_name) and re.search(r'putative', product_name):
+        product_name = re.sub(r'putative', r'', product_name)
 
     # make yippee-like uniformal, if there is no dash, introduce it
     product_name = re.sub(r'yippee like', r'yippee-like', product_name)
@@ -128,7 +140,19 @@ def fix_product_name(product_name):
 
     # if something comes afte -like, move the -like to the end of the string
     product_name = re.sub(r'(.*)-like(.*)', r'\1\2-like', product_name)
-    
+
+    # if manganese-dependent
+    product_name = re.sub(r'manganese-dependent', r'manganese dependent', product_name)
+    # if it contains dependent but neither protein nor enzyme nor complex, append protein
+    if re.search(r'dependent', product_name) and not re.search(r'protein|enzyme|complex', product_name):
+        product_name = product_name + ' protein'
+
+    if re.search(r'^\s*1-like$', product_name) or re.search(r'^\s*1 protein-like$', product_name):
+        print("Trying to fix ", product_name)
+        product_name = re.sub(r'^\s*1-like$', r'hypothetical protein', product_name)
+        product_name = re.sub(r'^\s*1 protein-like$', r'hypothetical protein', product_name)
+        print("Fixed to ", product_name)
+
     # residue Fragilaria_radians.dr # this should be ignored, it's valuable information
     # conserved protein Thalassiosira_delicatula.dr I think this should also be ignored
 
