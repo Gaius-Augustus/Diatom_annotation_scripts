@@ -148,10 +148,8 @@ def fix_product_name(product_name):
         product_name = product_name + ' protein'
 
     if re.search(r'^\s*1-like$', product_name) or re.search(r'^\s*1 protein-like$', product_name):
-        print("Trying to fix ", product_name)
         product_name = re.sub(r'^\s*1-like$', r'hypothetical protein', product_name)
         product_name = re.sub(r'^\s*1 protein-like$', r'hypothetical protein', product_name)
-        print("Fixed to ", product_name)
 
     # residue Fragilaria_radians.dr # this should be ignored, it's valuable information
     # conserved protein Thalassiosira_delicatula.dr I think this should also be ignored
