@@ -56,4 +56,4 @@ The contents of species-specific fixed_dbxref.gff3 files are provided at Zenodo 
 
 ## OrthoFinder analysis
 
-The bash scripts and command to perform OrthoFinder analysis are described in (orthofinder.md)[orthofinder.md].
+The bash scripts and command to perform OrthoFinder analysis are described in [orthofinder.md](orthofinder.md).
