@@ -262,3 +262,21 @@ The contents of species-specific fixed_dbxref.gff3 files are provided at Zenodo 
 ## OrthoFinder analysis
 
 The bash scripts and command to perform OrthoFinder analysis are described in [orthofinder.md](orthofinder.md).
+
+## Ploidy estimation with smudgeplot  
+Ploidy was estimated for diatoms with paired-end DNA sequences available on NCBI (35 total):
+```
+nextflow run smudgeplot.nf -profile singularity --sra "sra.txt"
+```
+**Scripts/Files:**
+* [smudgeplot.nf](smudgeplot.nf) - Nextflow ploidy workflow (FETCH_SRA **->** KRAKEN **->** FASTK **->** SMUDGEPLOT)
+* [nextflow.config](nextflow.config) - Nextflow config file; declares singularity profile and parameters
+* sra.txt - List of diatom SRA accessions to be pulled from NCBI
+```
+$ head -5 sra.txt
+SRR26112839
+SRR14100021
+SRR18733581
+SRR18733586
+SRR18733505
+```
