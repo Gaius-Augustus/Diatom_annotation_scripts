@@ -154,7 +154,6 @@ done
 The resulting files were used to decorate the GFF3 files as follows:
 
 ```
-# Loop through all GFF files of the form "*_ncbi.no_agat.mRNA.fixednames.dbxref.gff"
 for file in NCBI_gffs_filtered/*_ncbi.no_agat.mRNA.fixednames.dbxref.gff
 do
     # Strip the suffix to get the base name (e.g., "Asterionella_formosa")
@@ -167,33 +166,56 @@ do
     # Construct an output file name (you can change to suit your needs)
     output_gff="NCBI_gffs_filtered/${base_name}_ncbi.no_agat.mRNA.fixednames.dbxref.withContaminationTag.gff"
 
+    # Check if the contamination file exists
     if [[ -f "$contam_file" ]]; then
         echo "Processing $file with contamination list $contam_file ..."
         awk -F'\t' -v OFS='\t' -v cf="$contam_file" '
             BEGIN {
-                # Read high-contamination contig names into an array
+                # If the file exists, load high-contamination contig names into an array
                 while ((getline line < cf) > 0) {
-                    contig[line] = 1
+                    contam[line] = 1
                 }
                 close(cf)
             }
             {
-                # If this line corresponds to a gene feature ($3 == "CDS")
-                # and its contig name ($1) is in our contamination list,
-                # append the Note attribute.
-                if (($1 in contig) && ($3 == "CDS")) {
-                    $9 = $9 ";Note=The genomic contig of this gene structure is likely a contamination"
+                # If line doesn't look like GFF feature lines (e.g. comment or FASTA), just print
+                if ($1 ~ /^#/ || NF < 9) {
+                    print; next
                 }
+
+                # 1) Capitalize any existing note= to Note=
+                gsub(/note=/, "Note=", $9);
+
+                # 2) If this line is on a contaminated contig and is a CDS feature,
+                #    append or create the contamination note in the attributes.
+                if (($1 in contam) && ($3 == "CDS")) {
+                    if ($9 ~ /Note=/) {
+                        # Append to existing Note
+                        sub(/(Note=[^;"]*)/, "&, The genomic contig of this gene structure is likely a contamination", $9)
+                    } else {
+                        # Create a new Note attribute
+                        $9 = $9 ";Note=The genomic contig of this gene structure is likely a contamination"
+                    }
+                }
+
                 print
             }
         ' "$file" > "$output_gff"
     else
-        # If no contamination file is found, just copy the original GFF
-        echo "No contamination file found for $base_name; copying $file unchanged ..."
-        echo "$contam_file"
-        cp "$file" "$output_gff"
+        # If no contamination file is found, we still need to capitalize 'note=' -> 'Note='
+        echo "No contamination file found for $base_name; still capitalizing note fields ..."
+        # Run awk to only capitalize note= to Note=, no contamination logic
+        awk -F'\t' -v OFS='\t' '
+            {
+                if ($1 ~ /^#/ || NF < 9) {
+                    print; next
+                }
+                # Capitalize any existing note= to Note=
+                gsub(/note=/, "Note=", $9)
+                print
+            }
+        ' "$file" > "$output_gff"
     fi
-
 done
 ```
 ## Horizontal Gene Transfer Analysis
