@@ -45,6 +45,189 @@ add_mRNA_line.py -i decorated.gff3 -o mRNA.gff3
 fix_product_names_ncbi.py -i mRNA.gff3 -o fixed_names.gff3
 fix_Dbxref_attributes_in_genes.py -i fixed_names.gff3 -o fixed_dbxref.gff3
 ```
+## Tagging contaminations in the GFF3 file
+
+Contamination information was extracted from the EnTAP output as follows:
+
+```
+# List of species
+species_list="Asterionella_formosa Craspedostauros_australis Cyclotella_cryptica Epithemia_pelagica Mediolabrus_comicus Pseudo-nitzschia_multiseries Skeletonema_tropicum Thalassiosira_exigua Thalassiosira_pacifica Asterionellopsis_glacialis Cyclostephanos_invisitatus Cylindrotheca_fusiformis Fistulifera_pelliculosa Nitzschia_palea Pseudo-nitzschia_pungens Stephanocyclus_meneghinianus Thalassiosira_gravida Thalassiosira_profunda Bacterosira_constricta Cyclostephanos_tholiformis Detonula_confervacea Fistulifera_solaris Nitzschia_putrida Skeletonema_costatum Stephanodiscus_minutulus Thalassiosira_livingstoniorum Thalassiosira_sundarbana Chaetoceros_muellerii Cyclotella_atomus Discostella_pseudostelligera Fragilaria_radians Porosira_glacialis Skeletonema_marinoi Stephanodiscus_triporus Thalassiosira_mediterranea Conticribra_guillardii Cyclotella_baltica Discostella_stelligera Fragilariopsis_cylindrus Psammoneis_japonica Skeletonema_menzelii Thalassiosira_allenii Thalassiosira_oceanica Conticribra_weissflogii Cyclotella_choctawhatcheeana Discostella_stelligeroides Licmophora_abbreviata Pseudo-nitzschia_delicatissima Skeletonema_potamos Thalassiosira_delicatula Thalassiosira_ordinaria"
+
+# Loop through each species
+for S in $species_list; do
+    echo "$S"
+    cd /nas-hs/projs/diatom-dl/braker-snake/data/entap/$S/braker/entap_outfiles/final_results
+O=contam_contigs
+mkdir ${O}
+tail -n +2 annotated_contam.tsv | cut -f1 | sort -u > ${O}/contam_tx.lst
+tail -n +2 annotated_without_contam.tsv | cut -f1 | sort -u > ${O}/no_contam_tx.lst
+# retrieve the contigs of the transcripts including a count, i.e. how often have we seen this contig in what category?
+
+# Extract contigs for contaminated transcripts
+grep -F -f ${O}/contam_tx.lst /nas-hs/projs/diatom-dl/braker-snake/data/species/${S}/braker/braker.gtf | \
+awk '{print $1"\t"$12}' | \
+sed 's/"//g; s/;//g' | sort -u > ${O}/contam_contigs_full.tsv
+
+# Extract contigs for non-contaminated transcripts
+grep -F -f ${O}/no_contam_tx.lst /nas-hs/projs/diatom-dl/braker-snake/data/species/${S}/braker/braker.gtf | \
+awk '{print $1"\t"$12}' | \
+sed 's/"//g; s/;//g' | sort -u > ${O}/no_contam_contigs_full.tsv
+
+# Count occurrences of contaminated contigs
+cut -f1 ${O}/contam_contigs_full.tsv | sort | uniq -c | awk '{print $2"\t"$1}' > ${O}/contam_contigs_counts.txt
+
+# Count occurrences of non-contaminated contigs
+cut -f1 ${O}/no_contam_contigs_full.tsv | sort | uniq -c | awk '{print $2"\t"$1}' > ${O}/no_contam_contigs_counts.txt
+
+# Define input files
+contam_file="${O}/contam_contigs_counts.txt"
+no_contam_file="${O}/no_contam_contigs_counts.txt"
+output_file="${O}/contig_contamination_percentage.txt"
+
+# Prepare a temporary file with all contigs and their counts
+join -a1 -a2 -e 0 -o 0,1.2,2.2 -t $'\t' \
+    <(sort "${contam_file}") \
+    <(sort "${no_contam_file}") > "${O}/joined_contig_counts.txt"
+
+# Process the joined file and compute contamination percentages
+awk -F '\t' '{
+    contam = $2;      # Contaminated count
+    no_contam = $3;   # Non-contaminated count
+    contig = $1;      # Contig name
+
+    if (no_contam == 0) {
+        # Contig exists only in contaminated
+        print contig "\t100%" > "'${output_file}'"
+    } else {
+        # Calculate contamination percentage
+        perc = (contam / (contam + no_contam)) * 100;
+        print contig "\t" perc "%" > "'${output_file}'"
+    }
+}' "${O}/joined_contig_counts.txt"
+
+# Clean up temporary files (optional)
+rm "${O}/joined_contig_counts.txt"
+
+echo "Results written to ${output_file}"
+
+# Define input files
+contam_file="${O}/contam_contigs_counts.txt"
+no_contam_file="${O}/no_contam_contigs_counts.txt"
+output_file="${O}/contig_contamination_percentage.txt"
+filtered_output_file="${O}/high_contamination_contigs.txt"
+
+# Prepare a temporary file with all contigs and their counts
+join -a1 -a2 -e 0 -o 0,1.2,2.2 -t $'\t' \
+    <(sort "${contam_file}") \
+    <(sort "${no_contam_file}") > "${O}/joined_contig_counts.txt"
+
+# Process the joined file and compute contamination percentages
+awk -F '\t' '{
+    contam = $2;      # Contaminated count
+    no_contam = $3;   # Non-contaminated count
+    contig = $1;      # Contig name
+
+    if (no_contam == 0) {
+        # Contig exists only in contaminated
+        perc = 100;
+    } else {
+        # Calculate contamination percentage
+        perc = (contam / (contam + no_contam)) * 100;
+    }
+
+    # Output all results with percentages
+    print contig "\t" perc "%" > "'${output_file}'"
+
+    # Filter for high contamination (greater than 75%)
+    if (perc > 75) {
+        print contig > "'${filtered_output_file}'"
+    }
+}' "${O}/joined_contig_counts.txt"
+
+# Clean up temporary files (optional)
+rm "${O}/joined_contig_counts.txt"
+
+echo "Filtered results (contigs with >75% contamination) written to ${filtered_output_file}"
+done
+```
+
+The resulting files were used to decorate the GFF3 files as follows:
+
+```
+# Loop through all GFF files of the form "*_ncbi.no_agat.mRNA.fixednames.dbxref.gff"
+for file in NCBI_gffs_filtered/*_ncbi.no_agat.mRNA.fixednames.dbxref.gff
+do
+    # Strip the suffix to get the base name (e.g., "Asterionella_formosa")
+    base_name="${file%_ncbi.no_agat.mRNA.fixednames.dbxref.gff}"
+    base_name="$(basename "$base_name")"
+
+    # Path to the high-contamination contigs list
+    contam_file="entap/${base_name}/braker/entap_outfiles/final_results/contam_contigs/high_contamination_contigs.txt"
+
+    # Construct an output file name (you can change to suit your needs)
+    output_gff="NCBI_gffs_filtered/${base_name}_ncbi.no_agat.mRNA.fixednames.dbxref.withContaminationTag.gff"
+
+    if [[ -f "$contam_file" ]]; then
+        echo "Processing $file with contamination list $contam_file ..."
+        awk -F'\t' -v OFS='\t' -v cf="$contam_file" '
+            BEGIN {
+                # Read high-contamination contig names into an array
+                while ((getline line < cf) > 0) {
+                    contig[line] = 1
+                }
+                close(cf)
+            }
+            {
+                # If this line corresponds to a gene feature ($3 == "CDS")
+                # and its contig name ($1) is in our contamination list,
+                # append the Note attribute.
+                if (($1 in contig) && ($3 == "CDS")) {
+                    $9 = $9 ";Note=The genomic contig of this gene structure is likely a contamination"
+                }
+                print
+            }
+        ' "$file" > "$output_gff"
+    else
+        # If no contamination file is found, just copy the original GFF
+        echo "No contamination file found for $base_name; copying $file unchanged ..."
+        echo "$contam_file"
+        cp "$file" "$output_gff"
+    fi
+
+done
+```
+## Horizontal Gene Transfer Analysis
+
+In addition to utilizing the data already gathered by EnTAP in the annotation phase, every diatom species was blasted (with DIAMOND version 2.1.8, same version as the primary annotation) against donor and recipient databases with the following general DIAMOND command:
+
+```
+diamond-2.1.8 blastp -o path/to/output/file -f 6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore qcovhsp stitle --very-sensitive -p 8 --max-target-seqs 3 --evalue 0.000010 --subject-cover 50.000000 --query-cover 50.000000 -q path/to/fasta/file -d path/to/diamond/database
+```
+
+Note the parameters of evalue (0.000010), subject coverage (50), query coverage (50), sensitivity (very-sensitive).
+
+The donor databases:
+* NCBI Refseq Bacteria Protein 228
+* NCBI Refseq Plant Protein 216
+
+The recipient database:
+* NCBI Refseq Orchrophyta with the Diatoms removed
+    * This was generated through NCBI query `txid2696291[organism:exp] AND refseq[filter] NOT txid2836[organism:exp]` on January 29th 2025 resulting in 34,013 proteins at the time.
+
+The results of running DIAMOND against the donor and recipient databases were then analyzed using the following criteria to determine potential HGT candidates. The longest isoform was used to represent the primary gene for HGT analysis.
+
+* If gene aligned against the bacteria donor database, and not plant donor
+* If gene did not align against the recipient database
+
+If all of the above were true, this provided the list of potential candidates. The list was further refined using the following criteria with locational data from the GFF. 
+
+* Remove HGT candidate if it does not have two flanks/neighboring genes
+* Remove HGT candidate if either of the flanks were flagged as a contaminant
+* Contaminant defined as the primary annotation taxonomy belonging to bacteria or fungi lineage
+* Remove HGT candidate if either flanks are an HGT candidate
+* Remove HGT candidate if either flanks have an alignment against a donor database
+
+Once all of the additional filtering was complete, we were left with the final HGTs.
 
 ## Retrieving longest isoform for final OrthoFinder analysis (from braker.aa)
 
