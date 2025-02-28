@@ -20,7 +20,6 @@ def italic_labels_factory(ref_species_set):
             label_clean = clade.name.replace('_', r'\ ')
             if clade.name in ref_species_set:
                 # Bold + italic
-                print("got to bold face")
                 return rf"$\mathbf{{\mathit{{{label_clean}}}}}$"
             else:
                 # Normal italic
@@ -33,7 +32,6 @@ def make_label_colors(ref_species, outgroup_dict=None):
     """
     Return a dictionary { cladeName : colorString }
     IMPORTANT: cladeName must match the actual clade.name in the tree file.
-    Hoever, this is still not working.
     """
     label_colors = {}
     if outgroup_dict:
@@ -54,7 +52,7 @@ def plot_phylogenetic_tree(
     """
     Plots your phylogenetic tree with:
       - italic leaf labels (bold+italic if ref_species),
-      - No internal node labels,
+      - NO internal node labels,
       - numeric branch labels (small, slightly shifted),
       - sublineage rectangles and labels,
       - scale bar, etc.
@@ -93,10 +91,10 @@ def plot_phylogenetic_tree(
         sublineage_adjustments = sublineage_adjustments or {}
         short_factor = 0.95
         new_x_max = x_min + short_factor * (x_max - x_min)
-
+        # Outgroup     Coscino..  Mediophyc   Fragilar Bacillario
         pastel_palette = [
-            "#aec6cf", "#c5e384", "#f4b5bd", "#fff4b3",
-            "#cdb7f6", "#ffdab9", "#ffd1dc", "#baffc9"
+            "#aec6cf", "#FED9A6", "#FBB4AE", "#CCEBC5", "#DECBE4",
+            "#CCEBC5",  "#DECBE4", "#CCEBC5", "#DECBE4", "#FED9A6", "#DECBE4","#FED9A6", "#DECBE4","#FED9A6",
         ]
 
         for i, (label, start, end) in enumerate(sublineage_annotations):
@@ -148,7 +146,7 @@ def plot_phylogenetic_tree(
     bar_x_end = bar_x_start + scale_bar_len
     bar_y = y_min + y_margin
 
-    ax.plot([bar_x_start, bar_x_end], [bar_y, bar_y], color='black', lw=2, zorder=2)
+    ax.plot([bar_x_start, bar_x_end], [bar_y, bar_y], color='black', lw=1, zorder=2)
     cap_size = 0.003 * (y_max - y_min)
     ax.plot([bar_x_start, bar_x_start], [bar_y - cap_size, bar_y + cap_size], color='black', lw=2, zorder=2)
     ax.plot([bar_x_end,   bar_x_end],   [bar_y - cap_size, bar_y + cap_size], color='black', lw=2, zorder=2)
@@ -178,13 +176,11 @@ def plot_phylogenetic_tree(
     plt.show()
 
 
-###############################################################################
-# Example usage
-###############################################################################
+## Coloring is regrettably not working... we tried.
 
 # 1) Reference species => set them to red
 ref_species = [
-    "Chaetoceros\ tenuissimus",
+    "Chaetoceros_tenuissimus",
     "Cylindrotheca_closterium",
     "Fragilaria_crotonensis",
     "Mayamaea_pseudoterrestris",
@@ -197,7 +193,7 @@ ref_species = [
 
 # 2) Outgroup => blue
 outgroup = {
-    "Phytophthora\ cinnamomi": "blue",
+    "Phytophthora_cinnamomi": "blue",
     "Bremia_lactucae": "blue",
     "Phytophthora_infestans": "blue",
     "Phytophthora_nicotianae": "blue",
@@ -207,30 +203,46 @@ outgroup = {
 
 # 3) Sublineage intervals etc.
 sublineage_annotations = [
-    ("Outgroup: Phytophtora",      0, 4),
-    ("Early-Diverging Diatoms",    5, 11),
-    ("Cyclotelloid Diatoms",       12, 16),
-    ("Intermediate Centric Diatoms", 17, 22),
-    ("Thalassiosiroid Diatoms",    23, 33),
-    ("Skeletonemoid Diatoms",      34, 39),
-    ("Nitzschioid Diatoms",        40, 60),
-    ("Chaetocerotid Diatoms",      61, 62)
+    ("Outgroup: Oomycota",      0, 5.5),
+    ("Coscinodiscophyceae",    5.5, 7.5),
+    ("Mediophyceae ",       7.5, 8.5),
+    ("Fragilariophyceae", 8.5, 9.5),
+    ("Bacillariophyceae",    9.5, 16.5),
+    ("Fragilariophyceae",      16.5, 19.5),
+    ("Bacillariophyceae",        19.5, 20.5),
+    ("Fragilariophyceae",      20.5, 21.5),
+    ("Bacillariophyceae",        21.5, 26.5),
+    ("Coscinodiscophyceae",    26.5, 34.5),
+    ("Bacillariophyceae",        34.5, 36.5),
+     ("Coscinodiscophyceae",    36.5, 40.5),
+        ("Bacillariophyceae",        40.5, 41.5),
+         ("Coscinodiscophyceae",    41.5, 65.5),
 ]
 
 sublineage_adjustments = {
-    "Outgroup: Phytophtora":        (-5.0, 5.5),
-    "Early-Diverging Diatoms":      (-5.5, 4.5),
-    "Cyclotelloid Diatoms":         (-6.5, 3.5),
-    "Intermediate Centric Diatoms": (-6.5, 5.5),
-    "Thalassiosiroid Diatoms":      (-10.5, 10.5),
-    "Skeletonemoid Diatoms":        (-5.5, 5.5),
-    "Nitzschioid Diatoms":          (-20.5, 20.5),
-    "Chaetocerotid Diatoms":        (-1.5, 2)
+    "Outgroup: Oomycota":        (0,0),
+    "Coscinodiscophyceae":      (0,0),
+    "Mediophyceae":         (0,0),
+    "Fragilariophyceae": (0,0),
+    "Bacillariophyceae":      (0,0),
+    "Fragilariophyceae":        (0,0),
+    "Bacillariophyceae":          (0,0),
+    "Fragilariophyceae":        (0,0),
+    "Bacillariophyceae":          (0,0),
+     "Coscinodiscophyceae":      (0,0),
+    "Bacillariophyceae":          (0,0),
+         "Coscinodiscophyceae":      (0,0),
+        "Bacillariophyceae":          (0,0),
+    "Coscinodiscophyceae":      (0,0),
 }
 
 output_file = "tree_with_sublineages.jpeg"
 
 tree = Phylo.read("phytophtora.txt", "newick")
+
+# OPTIONAL: remove node labels from Newick text
+# newick_str = remove_node_labels(tree.format("newick"))
+# tree = Phylo.read(StringIO(newick_str), "newick")
 
 base_label_colors = make_label_colors(ref_species, outgroup)
 
