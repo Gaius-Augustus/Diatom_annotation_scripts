@@ -6,6 +6,14 @@ Contact: katharina.hoff@uni-greifswald.de
 
 On the basis of functional annotation with EnTAP, results of an initial OrthoFinder run (with only the newly annotated protein sets), and a DIAMOND search against NCBI NR, the braker.gtf file was filtered as follows:
 
+We extract the assigned homologs for each species from the `OrthoFinder/Orthogroups/Orthogroups.tsv` file:
+
+```
+./write_list_files.py
+```
+
+This generates a subfolder `output_files` with one file per species.
+
 ```
 # Make intersection
 overlapStat.pl single_exon_genes_without_hit.txt orthofinder_assigned_homolog.lst --outfiles
