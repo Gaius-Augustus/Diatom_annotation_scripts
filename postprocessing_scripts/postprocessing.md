@@ -9,6 +9,7 @@ On the basis of functional annotation with EnTAP, results of an initial OrthoFin
 ```
 # Make intersection
 overlapStat.pl single_exon_genes_without_hit.txt orthofinder_assigned_homolog.lst --outfiles
+# the file orthofinder_assigned_homolog.lst is located in the Orthogroups folder of OrthoFinder, one file per species
     
 # Rename the output file and clean up
 mv combset.10.lst to_be_removed_before_entap.lst
