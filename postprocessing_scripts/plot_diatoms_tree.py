@@ -47,27 +47,26 @@ def plot_phylogenetic_tree(
     ref_species,
     base_label_colors=None,
     sublineage_annotations=None,
-    sublineage_adjustments=None
-):
-    """
-    Plots your phylogenetic tree with:
-      - italic leaf labels (bold+italic if ref_species),
-      - NO internal node labels,
-      - numeric branch labels (small, slightly shifted),
-      - sublineage rectangles and labels,
-      - scale bar, etc.
-    """
-
+    sublineage_adjustments=None):
     ref_species_set = set(ref_species)
     label_func = italic_labels_factory(ref_species_set)
 
-    fig, ax = plt.subplots(figsize=(20, 22))
+    fig, ax = plt.subplots(figsize=(24, 22))
+
+    # Sort tree so outgroups (blue labels) appear at the bottom
+    if base_label_colors:
+        def sort_key(clade):
+            if clade.name and clade.name in base_label_colors and base_label_colors[clade.name] == "blue":
+                return 0  # Outgroup (blue) comes first (bottom)
+            return 1  # Others come after
+        tree.ladderize(reverse=True)  # first reverse (default ascending), then custom
+        tree.clade.clades.sort(key=sort_key)
 
     # Draw the tree
     Phylo.draw(
         tree,
         label_func=label_func,
-        label_colors=base_label_colors,   # e.g. outgroup => 'blue', reference => 'red'
+        label_colors=base_label_colors,
         branch_labels=lambda c: c.branch_length,
         do_show=False,
         axes=ax
@@ -91,10 +90,10 @@ def plot_phylogenetic_tree(
         sublineage_adjustments = sublineage_adjustments or {}
         short_factor = 0.95
         new_x_max = x_min + short_factor * (x_max - x_min)
-        # Outgroup     Coscino..  Mediophyc   Fragilar Bacillario
+
         pastel_palette = [
-            "#aec6cf", "#FED9A6", "#FBB4AE", "#CCEBC5", "#DECBE4",
-            "#CCEBC5",  "#DECBE4", "#CCEBC5", "#DECBE4", "#FED9A6", "#DECBE4","#FED9A6", "#DECBE4","#FED9A6",
+            "#FED9A6",  "#DECBE4", "#CCEBC5", "#FBB4AE","#FED9A6","#aec6cf","#CCEBC5"
+               
         ]
 
         for i, (label, start, end) in enumerate(sublineage_annotations):
@@ -138,8 +137,8 @@ def plot_phylogenetic_tree(
                 color='black'
             )
 
-    # Scale bar
-    scale_bar_len = 1.0
+    # Scale bar (updated to 0.5)
+    scale_bar_len = 0.5  # changed from 1.0
     x_margin = 0.10 * (x_max - x_min)
     y_margin = 0.02 * (y_max - y_min)
     bar_x_start = x_min + x_margin
@@ -149,12 +148,12 @@ def plot_phylogenetic_tree(
     ax.plot([bar_x_start, bar_x_end], [bar_y, bar_y], color='black', lw=1, zorder=2)
     cap_size = 0.003 * (y_max - y_min)
     ax.plot([bar_x_start, bar_x_start], [bar_y - cap_size, bar_y + cap_size], color='black', lw=2, zorder=2)
-    ax.plot([bar_x_end,   bar_x_end],   [bar_y - cap_size, bar_y + cap_size], color='black', lw=2, zorder=2)
+    ax.plot([bar_x_end, bar_x_end], [bar_y - cap_size, bar_y + cap_size], color='black', lw=2, zorder=2)
 
     ax.text(
         0.5 * (bar_x_start + bar_x_end),
         bar_y + 2 * cap_size,
-        "1.0",
+        "0.5",  # changed label from "1.0" to "0.5"
         ha='center',
         va='bottom',
         fontsize=12,
@@ -170,11 +169,10 @@ def plot_phylogenetic_tree(
             txt_obj.set_fontsize(8)
             x_old, y_old = txt_obj.get_position()
             txt_obj.set_position((x_old + x_shift, y_old))
-
-    plt.tight_layout()
-    plt.savefig(output_file, dpi=300, format='jpeg')
-    plt.show()
-
+        else:
+            # This is the TAXON label, increase its font size for better visibility
+            txt_obj.set_fontsize(14)  # Adjust taxon label font size
+    fig.savefig(output_file, format='jpeg', dpi=300, bbox_inches='tight')
 
 ## Coloring is regrettably not working... we tried.
 
@@ -203,42 +201,28 @@ outgroup = {
 
 # 3) Sublineage intervals etc.
 sublineage_annotations = [
-    ("Outgroup: Oomycota",      0, 5.5),
-    ("Coscinodiscophyceae",    5.5, 7.5),
-    ("Mediophyceae ",       7.5, 8.5),
-    ("Fragilariophyceae", 8.5, 9.5),
-    ("Bacillariophyceae",    9.5, 16.5),
-    ("Fragilariophyceae",      16.5, 19.5),
-    ("Bacillariophyceae",        19.5, 20.5),
-    ("Fragilariophyceae",      20.5, 21.5),
-    ("Bacillariophyceae",        21.5, 26.5),
-    ("Coscinodiscophyceae",    26.5, 34.5),
-    ("Bacillariophyceae",        34.5, 36.5),
-     ("Coscinodiscophyceae",    36.5, 40.5),
-        ("Bacillariophyceae",        40.5, 41.5),
-         ("Coscinodiscophyceae",    41.5, 65.5),
+    ("Coscinodiscophyceae", 0, 34.5),
+    ("Bacillariophyceae", 34.5, 50.5),
+    ("Fragilariophyceae", 50.5, 55.5),
+    ("Mediophyceae ", 55.5,56.5),
+    ("Coscinodiscophyceae", 56.5, 58.5),
+    ("Outgroup: Oomycota",      58.5, 65.5)
 ]
 
 sublineage_adjustments = {
     "Outgroup: Oomycota":        (0,0),
-    "Coscinodiscophyceae":      (0,0),
-    "Mediophyceae":         (0,0),
-    "Fragilariophyceae": (0,0),
-    "Bacillariophyceae":      (0,0),
+    "Coscinodiscophyceae":        (0,0),
+    "Bacillariophyceae":        (0,0),
     "Fragilariophyceae":        (0,0),
-    "Bacillariophyceae":          (0,0),
+    "Mediophyceae ":        (0,0),
     "Fragilariophyceae":        (0,0),
-    "Bacillariophyceae":          (0,0),
-     "Coscinodiscophyceae":      (0,0),
-    "Bacillariophyceae":          (0,0),
-         "Coscinodiscophyceae":      (0,0),
-        "Bacillariophyceae":          (0,0),
-    "Coscinodiscophyceae":      (0,0),
-}
+    "Coscinodiscophyceae":        (0,0)
+    }
 
-output_file = "tree_with_sublineages.jpeg"
 
-tree = Phylo.read("phytophtora.txt", "newick")
+output_file = "Figure4_tree_with_sublineages.jpeg"
+
+tree = Phylo.read("phytophtora_cleaned.nwk", "newick")
 
 # OPTIONAL: remove node labels from Newick text
 # newick_str = remove_node_labels(tree.format("newick"))
