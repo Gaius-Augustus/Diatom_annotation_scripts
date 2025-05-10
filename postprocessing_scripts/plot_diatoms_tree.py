@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from Bio import Phylo
 from io import StringIO
 import re
@@ -63,6 +65,7 @@ def plot_phylogenetic_tree(
         tree.clade.clades.sort(key=sort_key)
 
     # Draw the tree
+    plt.rcParams.update({'font.size': 18}) # this font size change actually has an effect
     Phylo.draw(
         tree,
         label_func=label_func,
@@ -71,6 +74,9 @@ def plot_phylogenetic_tree(
         do_show=False,
         axes=ax
     )
+    
+    extra = 0.10 * (ax.get_xlim()[1] - ax.get_xlim()[0])  # 10 % of current width
+    ax.set_xlim(ax.get_xlim()[0], ax.get_xlim()[1] + extra)
 
     # Remove axes/spines
     ax.set_xlabel(None)
@@ -133,7 +139,7 @@ def plot_phylogenetic_tree(
                 label,
                 va='center',
                 ha='left',
-                fontsize=14,
+                fontsize=18, # not taking effect...
                 color='black'
             )
 
@@ -151,13 +157,13 @@ def plot_phylogenetic_tree(
     ax.plot([bar_x_end, bar_x_end], [bar_y - cap_size, bar_y + cap_size], color='black', lw=2, zorder=2)
 
     ax.text(
-        0.5 * (bar_x_start + bar_x_end),
-        bar_y + 2 * cap_size,
-        "0.5",  # changed label from "1.0" to "0.5"
-        ha='center',
-        va='bottom',
-        fontsize=12,
-        zorder=2
+    0.5 * (bar_x_start + bar_x_end),
+    bar_y - 2 * cap_size,   # move the label below the bar
+    "0.5",
+    ha='center',
+    va='top',               # anchor the top of the text to that y-coord
+    fontsize=18,
+    zorder=2
     )
 
     # Shrink & shift numeric branch-length labels
@@ -171,7 +177,7 @@ def plot_phylogenetic_tree(
             txt_obj.set_position((x_old + x_shift, y_old))
         else:
             # This is the TAXON label, increase its font size for better visibility
-            txt_obj.set_fontsize(14)  # Adjust taxon label font size
+            txt_obj.set_fontsize(18)  # Adjust taxon label font size, not taking effect
     fig.savefig(output_file, format='jpeg', dpi=300, bbox_inches='tight')
 
 ## Coloring is regrettably not working... we tried.
