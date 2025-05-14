@@ -388,7 +388,7 @@ for gff_file in "$ANNOTATIONS_DIR"/*.gff3; do
     echo "Converted to faa: ${faa_base_output}.aa"
 
     # optionally, remove the temporary filtered GFF file
-    rm "$filtered_gff_file"
+    # rm "$filtered_gff_file"
 done
 
 # clean up temporary exclusion list
