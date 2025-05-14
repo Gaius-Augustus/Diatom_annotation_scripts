@@ -317,17 +317,14 @@ tail -n +2 suppl_table7.tmp.tsv >> mapped_genes.tsv
 
 ### Step 2: Remove contaminants and HTG genes
 ```
-ANNOTATIONS_DIR="/nas-hs/projs/diatom-dl/braker-snake/data/Bacillariophyta_annotations"  	# input folder with .gff3.gz or .gff3 files
-LONGEST_ISOFORMS_DIR="longest_isoforms"                  	# temporary folder for GTF files with longest isoforms
-
-CLEANED_LONGEST_ISOFORMS_DIR="cleaned_longest_isoforms" 	# folder with GTF files without contaminated genes
-FAA_OUTPUT_DIR="cleaned_faa_files"               					# output folder for faa files (will be used as input for busco)
+ANNOTATIONS_DIR="/nas-hs/projs/diatom-dl/braker-snake/data/Bacillariophyta_annotations"  # input folder with .gff3.gz or .gff3 files
 GENOME_FASTA_DIR="/nas-hs/projs/diatom-dl/braker-snake/data/species/"   # Folder with genome FASTA files
+MAPPED_GENES_FILE="/home/natalia/busco_input/mapped_genes.tsv" # mapped genes file (with header)
 
-# mapped genes file (with header)
-MAPPED_GENES_FILE="/home/natalia/busco_input/mapped_genes.tsv"
-# temporary file for gene IDs to exclude
-EXCLUDE_LIST="/tmp/exclude_genes.lst"
+FAA_OUTPUT_DIR="cleaned_faa_files"  # output folder for faa files (will be used as input for busco)
+EXCLUDE_LIST="/tmp/exclude_genes.lst" # temporary file for gene IDs to exclude
+LONGEST_ISOFORMS_DIR="longest_isoforms"                  # temporary folder for GTF files with longest isoforms
+CLEANED_LONGEST_ISOFORMS_DIR="cleaned_longest_isoforms" 	# folder with GTF files without contaminated genes
 
 # tools
 LONGEST_ISOFORM_SCRIPT="/home/natalia/TSEBRA/bin/get_longest_isoform.py"
