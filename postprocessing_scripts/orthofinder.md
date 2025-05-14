@@ -1,4 +1,4 @@
-## The OrthoFinder program was run on 63 samples, including 9 previously annotated species (_Chaetoceros tenuissimus, Cylindrotheca closterium, Fragilaria crotonensis, Mayamaea pseudoterrestris, Nitzschia inconspicua, Phaeodactylum tricornutum, Pseudo-nitzschia multistriata, Seminavis robusta, Thalassiosira pseudonana_) and 5 species used as an ougroup (_Bremia lactucae, Phytophthora cinnamomi, Phytophthora infestans, Phytophthora ramorum, Phytophthora sojae_). 
+The OrthoFinder program was run on 63 samples, including 9 previously annotated species (_Chaetoceros tenuissimus, Cylindrotheca closterium, Fragilaria crotonensis, Mayamaea pseudoterrestris, Nitzschia inconspicua, Phaeodactylum tricornutum, Pseudo-nitzschia multistriata, Seminavis robusta, Thalassiosira pseudonana_) and 5 species used as an ougroup (_Bremia lactucae, Phytophthora cinnamomi, Phytophthora infestans, Phytophthora ramorum, Phytophthora sojae_). 
 
 As input data, you need to provide a folder with .faa files, for example Bacterosira_constricta.faa
 
