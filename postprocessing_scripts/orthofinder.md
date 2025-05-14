@@ -37,7 +37,6 @@ ulimit -Sn
 #/home/nenashen66/anaconda3/bin/python ~/OrthoFinder/orthofinder.py -fg $BASE_DIR -t 64 -a 16 -M msa -T fasttree
 ```
 
-script submission: sbatch slurm_run.sh
-The result of the program will be located in the directory: ${BASE_DIR}/output_diatoms_cleaned/Results_Apr07/
-
-Statistical data with results are presented in the directory Comparative_Genomics_Statistic in the file  Statistics_PerSpecies.tsv
+script submission: `sbatch slurm_run.sh`
+The result of the program will be located in the directory: `${BASE_DIR}/output_diatoms_cleaned/Results_Apr07/`
+Statistical data with results are presented in the directory `Comparative_Genomics_Statistic` in the file  `Statistics_PerSpecies.tsv`
