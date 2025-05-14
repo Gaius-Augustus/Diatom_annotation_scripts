@@ -1,45 +1,43 @@
-# The OrthoFinder program was run on 59 samples in two steps: an initial run on 40 samples (selected in alphabetical order) and on the remaining 19. 
+# The OrthoFinder program was run on 63 samples, including 9 previously annotated species (_Chaetoceros tenuissimus, Cylindrotheca closterium, Fragilaria crotonensis, Mayamaea pseudoterrestris, Nitzschia inconspicua, Phaeodactylum tricornutum, Pseudo-nitzschia multistriata, Seminavis robusta, Thalassiosira pseudonana_) and 5 species used as an ougroup (_Bremia lactucae, Phytophthora cinnamomi, Phytophthora infestans, Phytophthora ramorum, Phytophthora sojae_). 
 
-In the second step, we use an additional parameter that allows us to add samples to an already completed analysis.
 As input data, you need to provide a folder with .faa files, for example Bacterosira_constricta.faa
 
 Please note that all slurm script launch parameters should be adapted to your resources.
 
-## 1. Slurm script for the first run:
+## Slurm script for the execution of OrthoFinder
 ```
 #!/bin/bash
-#SBATCH --job-name=OrthoFinderInitial
-#SBATCH --output=orthofinder_initial_%j.log
-#SBATCH --ntasks=1
-#SBATCH --cpus-per-task=48
+#SBATCH --job-name=OrthoFinder                 # job name
+#SBATCH --output=orthofinder_%j.log    		   # std output and error log (%j: job ID)
+#SBATCH --ntasks=1                             # run on a single CPU
+#SBATCH --cpus-per-task=64                     # number of CPU cores per task
 #SBATCH --mem=96000          
-#SBATCH --time=48:00:00
+#SBATCH --time=72:00:00                        # time limit hrs:min:sec
 #SBATCH --partition=snowball
+
+source ~/.bashrc
+
 # Define directories
-BASE_DIR=~/diatoms
-FIRST_SUBSET_DIR=${BASE_DIR}/input_set1
-INPUTPUT_DIR=${BASE_DIR}/OF_initial
-# Run OrthoFinder for the first subset
-OrthoFinder/orthofinder.py -f $FIRST_SUBSET_DIR -t 48 -o $OUTPUT_DIR
-```
-script submission: sbatch slurm_run1.sh
-The result of the program will be located in the directory: ${BASE_DIR}/OF_initial/Results_Sep12/
+#SPECIES=diatoms
+BASE_DIR=/home/nenashen66/OrthoFinder/
+CLEANED_DATA=/home/natalia/busco_input/cleaned_faa_files/
+INPUT_DIR=${BASE_DIR}/input_diatoms/cleaned_faa_files/
+OUTPUT_DIR=${BASE_DIR}/output_diatoms_cleaned
 
-## 2. Slurm script for the second run:
-```
-#!/bin/bash
-#SBATCH --job-name=OrthoFinderAddSubset
-#SBATCH --output=orthofinder_add_%A_%a.log
-#SBATCH --ntasks=1                        
-#SBATCH --partition=snowball
-BASE_DIR=~/diatoms
-PREVIOUS_OUTPUT_DIR=${BASE_DIR}/OF_initial/Results_Sep12/
-SUBSET_DIR=$1
-# before the run of orthofinder, check and change the limit for the number of opened files, if it is necessary
-ulimit -n 10000 
-OrthoFinder/orthofinder.py -b $PREVIOUS_OUTPUT_DIR/WorkingDirectory/ -f $SUBSET_DIR -t 48
-```
-script submission: sbatch slurm_run2.sh ~/diatoms/input_set2
+mv $CLEANED_DATA $INPUT_DIR # input data for the OrhoFinder run should be inside the $BASE_DIR
 
-The result of the program will be located in the directory: ${BASE_DIR}/OF_initial/Results_Sep12/WorkingDirectory/OrthoFinder/Results_Sep12/
+ulimit -n 10000
+echo "Limit was changed:"
+ulimit -Sn
+
+/home/nenashen66/anaconda3/bin/python ~/OrthoFinder/orthofinder.py -f $INPUT_DIR -t 64 -a 16 -M msa -o $OUTPUT_DIR
+
+# execution of the OrthoFinder from the step of generation of the orthogroups:
+# also possible to use another method to generate a tree: -T fasttree
+#/home/nenashen66/anaconda3/bin/python ~/OrthoFinder/orthofinder.py -fg $BASE_DIR -t 64 -a 16 -M msa -T fasttree
+```
+
+script submission: sbatch slurm_run.sh
+The result of the program will be located in the directory: ${BASE_DIR}/output_diatoms_cleaned/Results_Apr07/
+
 Statistical data with results are presented in the directory Comparative_Genomics_Statistic in the file  Statistics_PerSpecies.tsv
