@@ -268,6 +268,136 @@ get_longest_isoform_from_braker_aa.py -i braker_filtered.aa -o braker_longest.aa
 
 The contents of species-specific fixed_dbxref.gff3 files are provided at Zenodo with doi 10.5281/zenodo.13745090
 
+## Clean faa files (remove contaminated genes and HGT genes)
+### Step 1: Create file with contaminated contigs
+
+```
+# make gtf files from gff3 if necessary with
+# gffread input.gff3  -T  -o output.gtf #conda install -c bioconda gffread
+
+export=~/OrthoFinder/species_braker_gtf_only # I made a separete directory for files, but it is not necessary; 
+cd $WORKDIR 
+# here should be a set of folders with braker_filtered.gtf files, for example: Asterionella_formosa/braker/braker_filtered.gtf
+
+# a. map genes to contigs
+
+# suppl_table6.tsv: https://docs.google.com/spreadsheets/d/1s2khPazgCiE_juLIOb_cU-yog9vZF4eNTCTblEtn3qg/edit?gid=0#gid=0
+python3 ./map_genes_to_contigs.py -s suppl_table6.tsv -r ./ -o ./mapped_genes.tsv
+
+# mapped_genes.tsv:
+#species contig  gene
+#Asterionella formosa    NKIB01000138.1  g191.t1
+#Asterionella formosa    NKIB01000374.1  g549.t1
+#Asterionella formosa    NKIB01000390.1  g570.t1
+
+# b. prepare tsv file with HGT genes
+# suppl_table7.tsv: https://docs.google.com/spreadsheets/d/1uHG6mxcYsl9Ar1GymwgRBxbjiODnbkWmPeyZ7sD6bFA/edit?gid=1437366730#gid=1437366730
+cat suppl_table7.tsv | cut -f1,8 | head --lines=-2 > tmp.tsv
+./add_HGT_column.sh tmp.tsv suppl_table7.tmp.tsv
+
+# suppl_table7.tmp.tsv
+#Species HGT     Final Transcript IDs in filtered GFF3
+#Asterionella formosa    HGT     g8223.t1,g5938.t1,g1909.t1,g2541.t1,g2541.t2,g11180.t1,g8789.t1
+#Asterionellopsis glacialis      HGT     g8351.t1,g4875.t1,g3876.t1,g7383.t1,g14445.t1,g5941.t1,..
+#Bacterosira constricta  HGT     
+#Chaetoceros muellerii   HGT     g4117.t1,g3341.t1,g2374.t1,g523.t1,g10377.t1,g10377.t2,..
+#Conticribra guillardii  HGT     g4925.t1,g2580.t1
+
+# c. Concatenate file with HGT genes and file with genes from contaminated contigs
+tail -n +2 suppl_table7.tmp.tsv >> mapped_genes.tsv
+# sort -o mapped_genes.tsv mapped_genes.tsv
+# rm suppl_table7.tmp.tsv
+
+# mapped_genes.tsv
+# species contig  gene
+# Asterionella formosa    HGT     g8223.t1,g5938.t1,g1909.t1,g2541.t1,g2541.t2,g11180.t1,g8789.t1
+# Asterionella formosa    NKIB01000138.1  g191.t1
+# Asterionella formosa    NKIB01000374.1  g549.t1
+```
+
+### Step 2: Remove contaminants and HTG genes
+```
+ANNOTATIONS_DIR="/nas-hs/projs/diatom-dl/braker-snake/data/Bacillariophyta_annotations"  	# input folder with .gff3.gz or .gff3 files
+LONGEST_ISOFORMS_DIR="longest_isoforms"                  	# temporary folder for GTF files with longest isoforms
+
+CLEANED_LONGEST_ISOFORMS_DIR="cleaned_longest_isoforms" 	# folder with GTF files without contaminated genes
+FAA_OUTPUT_DIR="cleaned_faa_files"               					# output folder for faa files (will be used as input for busco)
+GENOME_FASTA_DIR="/nas-hs/projs/diatom-dl/braker-snake/data/species/"   # Folder with genome FASTA files
+
+# mapped genes file (with header)
+MAPPED_GENES_FILE="/home/natalia/busco_input/mapped_genes.tsv"
+# temporary file for gene IDs to exclude
+EXCLUDE_LIST="/tmp/exclude_genes.lst"
+
+# tools
+LONGEST_ISOFORM_SCRIPT="/home/natalia/TSEBRA/bin/get_longest_isoform.py"
+GET_ANNO_FASTA_SCRIPT="/home/natalia/Augustus/scripts/getAnnoFastaFromJoingenes.py"  # GFF-to-FAA script
+PYTHON="python"
+
+# create output directories
+mkdir -p "$LONGEST_ISOFORMS_DIR"
+mkdir -p "$FAA_OUTPUT_DIR"
+
+# create exclusion list from mapped_genes.tsv
+grep -v '^#' "$MAPPED_GENES_FILE" | cut -f3 | tr ',' '\n' | sed '/^$/d' | sort -u > "$EXCLUDE_LIST"
+echo "Exclusion list created: $EXCLUDE_LIST"
+
+# process each unpacked gff3 file
+echo "Processing GFF files to remove contaminants..."
+for gff_file in "$ANNOTATIONS_DIR"/*.gff3; do
+    species_name=$(basename "$gff_file" | sed 's/.gff3//')
+    genome_file="$GENOME_FASTA_DIR/${species_name}/genome/genome.fa"
+
+    # check if the genome file exists
+    if [[ ! -f "$genome_file" ]]; then
+        echo "ERROR: Genome file not found for species $species_name ($genome_file)"
+        continue
+    fi
+
+    # filter the gff3 file to remove genes present in mapped_genes.tsv
+    filtered_gff_file="${ANNOTATIONS_DIR}/${species_name}_filtered.gff3" 
+    grep -Fv -f "$EXCLUDE_LIST" "$gff_file" > "$filtered_gff_file"
+    echo "Filtered GFF3 for $species_name -> $filtered_gff_file"
+
+    # Convert the filtered GFF3 to GTF 
+    gtf_file="${ANNOTATIONS_DIR}/${species_name}.gtf"
+    awk 'BEGIN {OFS="\t"} $1 !~ /^#/ {
+        # Split the attributes field to extract gene_id and transcript_id
+        split($9, attributes, ";");
+        gene_id = "";
+        transcript_id = "";
+        for (i in attributes) {
+            if (attributes[i] ~ /ID=/) {
+                gene_id = substr(attributes[i], index(attributes[i], "=") + 1);
+            } else if (attributes[i] ~ /Parent=/) {
+                transcript_id = substr(attributes[i], index(attributes[i], "=") + 1);
+            }
+        }
+        print $1, "source", $3, $4, $5, $6, $7, $8, "gene_id \"" gene_id "\"; transcript_id \"" transcript_id "\";"
+    }' "$filtered_gff_file" > "$gtf_file"
+    echo "Converted filtered gff3 to gtf for $species_name -> $gtf_file"
+
+    # b. get the longest isoforms from the gtf file (can be useful here)
+    #output_gtf="$LONGEST_ISOFORMS_DIR/${species_name}_longest_isoforms.gtf"
+    #$PYTHON "$LONGEST_ISOFORM_SCRIPT" -g "$gtf_file" -o "$output_gtf"
+    #echo "Longest isoforms extracted for $species_name -> $output_gtf"
+
+    # c. convert gtf to faa using getAnnoFastaFromJoingenes.py (also possible to convert gff3 to faa)
+    faa_base_output="$FAA_OUTPUT_DIR/${species_name}"  # Base name for output files
+    $PYTHON "$GET_ANNO_FASTA_SCRIPT" -g "$genome_file" -o "$faa_base_output" --gtf "$output_gtf"
+    echo "Converted to faa: ${faa_base_output}.aa"
+
+    # optionally, remove the temporary filtered GFF file
+    rm "$filtered_gff_file"
+done
+
+# clean up temporary exclusion list
+rm "$EXCLUDE_LIST"
+
+echo "Processing complete. Faa files are in $FAA_OUTPUT_DIR."
+# $FAA_OUTPUT_DIR directory can be used as an input for the next step.
+```
+
 ## OrthoFinder analysis
 
 The bash scripts and command to perform OrthoFinder analysis are described in [orthofinder.md](orthofinder.md).
