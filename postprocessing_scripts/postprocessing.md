@@ -270,7 +270,6 @@ The contents of species-specific fixed_dbxref.gff3 files are provided at Zenodo 
 
 ## Clean faa files (remove contaminated genes and HGT genes)
 ### Step 1: Create file with contaminated contigs
-
 ```
 # make gtf files from gff3 if necessary with
 # gffread input.gff3  -T  -o output.gtf #conda install -c bioconda gffread
@@ -326,10 +325,10 @@ EXCLUDE_LIST="/tmp/exclude_genes.lst" # temporary file for gene IDs to exclude
 LONGEST_ISOFORMS_DIR="longest_isoforms"                  # temporary folder for GTF files with longest isoforms
 CLEANED_LONGEST_ISOFORMS_DIR="cleaned_longest_isoforms" 	# folder with GTF files without contaminated genes
 
-# tools
-LONGEST_ISOFORM_SCRIPT="/home/natalia/TSEBRA/bin/get_longest_isoform.py"
-GET_ANNO_FASTA_SCRIPT="/home/natalia/Augustus/scripts/getAnnoFastaFromJoingenes.py"  # GFF-to-FAA script
+# scripts
 PYTHON="python"
+GET_ANNO_FASTA_SCRIPT="/home/natalia/Augustus/scripts/getAnnoFastaFromJoingenes.py"  # GFF-to-FAA script
+LONGEST_ISOFORM_SCRIPT="/home/natalia/TSEBRA/bin/get_longest_isoform.py"
 
 # create output directories
 mkdir -p "$LONGEST_ISOFORMS_DIR"
@@ -396,7 +395,6 @@ echo "Processing complete. Faa files are in $FAA_OUTPUT_DIR."
 ```
 
 ## OrthoFinder analysis
-
 The bash scripts and command to perform OrthoFinder analysis are described in [orthofinder.md](orthofinder.md).
 
 ## Ploidy estimation with smudgeplot  
