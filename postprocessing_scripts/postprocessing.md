@@ -281,7 +281,7 @@ cd $WORKDIR
 # a. map genes to contigs
 
 # suppl_table6.tsv: https://docs.google.com/spreadsheets/d/1s2khPazgCiE_juLIOb_cU-yog9vZF4eNTCTblEtn3qg/edit?gid=0#gid=0
-python3 ./map_genes_to_contigs.py -s suppl_table6.tsv -r ./ -o ./mapped_genes.tsv
+python3 ./map_genes_to_contigs.py -tsv suppl_table6.tsv -r ./ -o ./mapped_genes.tsv
 
 # mapped_genes.tsv:
 #species contig  gene
